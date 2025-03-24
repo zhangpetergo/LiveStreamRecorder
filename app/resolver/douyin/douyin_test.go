@@ -1,6 +1,7 @@
 package douyin
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -19,6 +20,17 @@ func TestGetStreamData_ValidURL_ReturnsStreamData(t *testing.T) {
 	result, err := GetStreamData(server.URL)
 	assert.NoError(t, err)
 	assert.Equal(t, ` "stream_url"`, result)
+}
+
+func TestGetStreamData(t *testing.T) {
+	url := "https://live.douyin.com/7032984711"
+
+	data, err := GetStreamData(url)
+	if err != nil {
+		fmt.Println("GetStreamData error:", err)
+		return
+	}
+	fmt.Printf("data: %v\n", data)
 }
 
 func TestGetStreamData_InvalidURL_ReturnsError(t *testing.T) {

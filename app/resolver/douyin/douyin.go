@@ -2,17 +2,24 @@
 package douyin
 
 import (
+	"errors"
 	"fmt"
 	"github.com/gocolly/colly/v2"
 	"regexp"
 	"strings"
 )
 
-// GetStreamData 根据 url 获取直播流数据
-func GetStreamData(url string) (string, error) {
+// ErrLiveStreamNotActive 未开播时的返回值
+var ErrLiveStreamNotActive = errors.New("live stream is not active")
 
-	var content, res string
+// GetStreamData 根据 url 获取直播流数据
+func GetStreamData(url string) (map[string]interface{}, error) {
+
+	var content string
 	var resErr error
+	data := make(map[string]interface{})
+
+	// -------------------------------------------------------------------------
 
 	// 设置请求的 header
 	headers := map[string]string{
@@ -40,7 +47,6 @@ func GetStreamData(url string) (string, error) {
 		// 检查是否含有 "state"
 		if strings.Contains(scriptContent, "state") {
 			fmt.Println("找到含有 \"state\" 的 script 内容:")
-			fmt.Println(scriptContent)
 			content = scriptContent
 		}
 	})
@@ -53,24 +59,33 @@ func GetStreamData(url string) (string, error) {
 
 	// -------------------------------------------------------------------------
 	if resErr != nil {
-		return "", resErr
+		return data, resErr
 	}
 
 	if content == "" {
-		return "", nil
+		return data, nil
 	}
 
 	// 替换掉字符串中的转义字符
 	cleanedString := strings.ReplaceAll(strings.ReplaceAll(content, `\`, ""), "u0026", "&")
 
-	// 通过各种各样的正则表达式提取需要的数据
-	re := regexp.MustCompile(`"FULL_HD1":([^,}]*)`)
+	// 获取 url
+	re := regexp.MustCompile(`"FULL_HD1":"([^,}]*)`)
 	matches := re.FindStringSubmatch(cleanedString)
 	if len(matches) > 1 {
-		res = matches[1]
+		data["url"] = matches[1]
 	} else {
-		fmt.Println("未找到 FULL_HD1 值")
+		return data, ErrLiveStreamNotActive
 	}
 
-	return res, nil
+	// 获取 anchor_name
+	re = regexp.MustCompile(`"nickname":"([^"}]*)`)
+	matches = re.FindStringSubmatch(cleanedString)
+	if len(matches) > 1 {
+		data["name"] = matches[1]
+	} else {
+		fmt.Println("未找到 anchor_name 值")
+	}
+
+	return data, nil
 }
