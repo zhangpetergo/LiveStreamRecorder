@@ -12,6 +12,7 @@ import (
 func GetStreamData(url string) (string, error) {
 
 	var content, res string
+	var resErr error
 
 	// 设置请求的 header
 	headers := map[string]string{
@@ -44,9 +45,16 @@ func GetStreamData(url string) (string, error) {
 		}
 	})
 
+	c.OnError(func(r *colly.Response, err error) {
+		resErr = err
+	})
+
 	c.Visit(url)
 
 	// -------------------------------------------------------------------------
+	if resErr != nil {
+		return "", resErr
+	}
 
 	if content == "" {
 		return "", nil
