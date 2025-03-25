@@ -2,10 +2,15 @@ package main
 
 import (
 	"fmt"
+	"github.com/zhangpetergo/LiveStreamRecorder/app/processor"
 	"github.com/zhangpetergo/LiveStreamRecorder/app/recorder"
 	"github.com/zhangpetergo/LiveStreamRecorder/app/resolver/douyin"
+	"github.com/zhangpetergo/LiveStreamRecorder/app/task"
 	"github.com/zhangpetergo/LiveStreamRecorder/foundation/logger"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 )
 
 /*
@@ -31,20 +36,65 @@ func main() {
 
 func run() error {
 	//url := "https://live.douyin.com/788699151429"
-	url := "https://live.douyin.com/7032984711"
+	//url := "https://live.douyin.com/7032984711"
 
-	data, err := douyin.GetStreamData(url)
+	// 读取 url 配置文件
 
-	fmt.Println(data)
+	// 返回 url 列表
+	urls := []string{"https://live.douyin.com/1", "https://live.douyin.com/2", "https://live.douyin.com/3"}
+	names := []string{"1", "2", "3"}
 
-	if err != nil {
-		return err
+	for index, url := range urls {
+		go func() {
+			defer func() {
+				if r := recover(); r != nil {
+					logger.Log.Errorw("ProcessStream", "url", url, "recover", r)
+				}
+			}()
+			err := processor.MockProcessStream(url, names[index])
+			if err != nil {
+				logger.Log.Errorw("ProcessStream", "url", url, "err", err)
+			}
+		}()
 	}
 
+	// 创建 Ticker，每 60 秒检查一次直播状态
+	checkTicker := time.NewTicker(60 * time.Second)
+	defer checkTicker.Stop()
+
+	// 创建 Ticker，每 5 秒刷新一次状态
+	printTicker := time.NewTicker(5 * time.Second)
+	defer printTicker.Stop()
+
+	// 监听系统信号（Ctrl+C 退出）
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+
+	for {
+		select {
+		case <-checkTicker.C:
+			// 检查直播状态
+
+		case <-printTicker.C:
+			task.PrintTasks()
+		case <-sigChan:
+			// 收到退出信号
+			fmt.Println("exit")
+			return nil
+		}
+
+	}
+}
+
+func test() {
+	url := "https://live.douyin.com/695496496290"
+	data, err := douyin.GetStreamData(url)
+	if err != nil {
+		logger.Log.Error(err.Error())
+	}
 	err = recorder.Record(data)
 	if err != nil {
-		return err
+		logger.Log.Error(err.Error())
 	}
 
-	return nil
 }

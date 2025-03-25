@@ -2,7 +2,6 @@
 package recorder
 
 import (
-	"bufio"
 	"fmt"
 	"os/exec"
 	"time"
@@ -34,7 +33,7 @@ func Record(data map[string]interface{}) error {
 		"./ffmpeg",
 		"-y",            // 覆盖输出文件
 		"-v", "verbose", // 输出详细信息
-		"-hide_banner", // 隐藏 ffmpeg 的 banner
+		//"-hide_banner", // 隐藏 ffmpeg 的 banner
 		"-user_agent", "\""+userAgent+"\"",
 		"-protocol_whitelist", "rtmp,crypto,file,http,https,tcp,tls,udp,rtp,httpproxy",
 		"-thread_queue_size", "1024",
@@ -57,42 +56,27 @@ func Record(data map[string]interface{}) error {
 		"-map", "0",
 		"-c:v", "copy",
 		"-c:a", "copy",
-		"-t", "10",
+		"-t", "60",
 		outputFile,
 	)
 
 	// 输出下构造的命令
-	fmt.Println("输出命令")
-	fmt.Println(cmd.String())
-
-	// 获取标准错误管道
-	stderr, err := cmd.StderrPipe()
-	if err != nil {
-		fmt.Printf("无法获取 stderr: %v\n", err)
-		return err
-	}
+	//fmt.Println("输出命令")
+	//fmt.Println(cmd.String())
 
 	// 启动命令
 	if err := cmd.Start(); err != nil {
 		fmt.Printf("命令启动失败: %v\n", err)
 		return err
 	}
-
-	// 异步读取标准错误
-	go func() {
-		scanner := bufio.NewScanner(stderr)
-		for scanner.Scan() {
-			fmt.Printf("错误: %s\n", scanner.Text())
-		}
-	}()
+	// 将 url 加入到正在录制的列表中
+	// 在主程序监控这个列表，
+	//recordingList = append(recordingList, url)
 
 	// 等待命令完成
 	if err := cmd.Wait(); err != nil {
-		fmt.Printf("命令执行失败: %v\n", err)
 		return err
 	}
-
-	fmt.Println("ffmpeg 处理完成，文件保存为", outputFile)
 
 	return nil
 }

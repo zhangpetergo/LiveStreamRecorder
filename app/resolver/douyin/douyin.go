@@ -70,7 +70,7 @@ func GetStreamData(url string) (map[string]interface{}, error) {
 	cleanedString := strings.ReplaceAll(strings.ReplaceAll(content, `\`, ""), "u0026", "&")
 
 	// 获取 url
-	re := regexp.MustCompile(`"FULL_HD1":"([^,}]*)`)
+	re := regexp.MustCompile(`"FULL_HD1":"([^"}]*)`)
 	matches := re.FindStringSubmatch(cleanedString)
 	if len(matches) > 1 {
 		data["url"] = matches[1]
