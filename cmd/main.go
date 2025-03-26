@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/zhangpetergo/LiveStreamRecorder/app/monitor"
 	"github.com/zhangpetergo/LiveStreamRecorder/app/processor"
 	"github.com/zhangpetergo/LiveStreamRecorder/app/recorder"
 	"github.com/zhangpetergo/LiveStreamRecorder/app/resolver/douyin"
@@ -47,19 +48,8 @@ func run() error {
 	urls := []string{"https://live.douyin.com/1", "https://live.douyin.com/2", "https://live.douyin.com/3"}
 	names := []string{"1", "2", "3"}
 
-	for index, url := range urls {
-		go func() {
-			defer func() {
-				if r := recover(); r != nil {
-					logger.Log.Errorw("ProcessStream", "url", url, "recover", r)
-				}
-			}()
-			err := processor.MockProcessStream(url, names[index])
-			if err != nil {
-				logger.Log.Errorw("ProcessStream", "url", url, "err", err)
-			}
-		}()
-	}
+	// 检测直播状态
+	monitor.MonitorStreams(urls)
 
 	// 创建 Ticker，每 60 秒检查一次直播状态
 	checkTicker := time.NewTicker(60 * time.Second)
@@ -77,7 +67,7 @@ func run() error {
 		select {
 		case <-checkTicker.C:
 			// 检查直播状态
-
+			monitor.MonitorStreams(urls)
 		case <-printTicker.C:
 			task.PrintTasks()
 		case <-sigChan:
