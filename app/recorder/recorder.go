@@ -56,7 +56,7 @@ func Record(data map[string]interface{}) error {
 		"-map", "0",
 		"-c:v", "copy",
 		"-c:a", "copy",
-		"-t", "60",
+		"-t", "10",
 		outputFile,
 	)
 
@@ -66,7 +66,6 @@ func Record(data map[string]interface{}) error {
 
 	// 启动命令
 	if err := cmd.Start(); err != nil {
-		fmt.Printf("命令启动失败: %v\n", err)
 		return err
 	}
 	// 将 url 加入到正在录制的列表中

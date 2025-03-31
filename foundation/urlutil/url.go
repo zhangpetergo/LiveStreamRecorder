@@ -10,6 +10,7 @@ type PlatformType string
 
 const (
 	PlatformUnknown  PlatformType = "unknown"
+	PlatformDouyin   PlatformType = "douyin"
 	PlatformBilibili PlatformType = "bilibili"
 	PlatformDouyu    PlatformType = "douyu"
 	PlatformHuya     PlatformType = "huya"
@@ -27,6 +28,8 @@ func GetPlatformFromURL(streamURL string) PlatformType {
 	host := parsedURL.Host
 
 	switch {
+	case strings.Contains(host, "douyin.com"):
+		return PlatformDouyin
 	case strings.Contains(host, "bilibili.com"):
 		return PlatformBilibili
 	case strings.Contains(host, "douyu.com"):

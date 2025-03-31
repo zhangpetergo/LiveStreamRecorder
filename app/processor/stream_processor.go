@@ -14,16 +14,16 @@ func ProcessStream(url string) error {
 	// 获取流数据
 	data, err := douyin.GetStreamData(url)
 	if err != nil {
-		logger.Log.Errorw("GetStreamData", "url", url, "err", err)
 		return err
 	}
 
 	// 记录流数据
 	err = recorder.Record(data)
 	if err != nil {
-		logger.Log.Errorw("GetStreamData", "url", url, "err", err)
 		return err
 	}
+
+	logger.Log.Infow("录制完毕", "url", url)
 
 	return nil
 }
