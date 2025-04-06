@@ -1,0 +1,17 @@
+#--------录制的配置--------
+
+# 保存的路径
+save_path: ./downloads
+
+# 每隔多少秒检测直播是否开播
+# 单位是秒，默认值为 60 秒
+poll_interval_seconds: 60
+
+# 是否开启分段录制
+enable_segmenting: true
+
+# 分段录制的时间间隔，单位为秒
+segment_duration_seconds: 1800
+
+
+

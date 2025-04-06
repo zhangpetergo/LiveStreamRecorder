@@ -3,12 +3,21 @@ package recorder
 
 import (
 	"fmt"
+	"github.com/zhangpetergo/LiveStreamRecorder/app/config"
+	"github.com/zhangpetergo/LiveStreamRecorder/foundation/fileutil"
 	"os/exec"
+	"strconv"
 	"time"
 )
 
 // Record 根据 输入的 url 使用 ffmpeg 下载直播流
 func Record(data map[string]interface{}) error {
+
+	cfg, err := config.GetConfig()
+	// 从逻辑上说 在 main 初始化 config后，这里不会出现 err
+	if err != nil {
+		return err
+	}
 
 	// 直播流 url
 	url, ok := data["url"].(string)
@@ -22,13 +31,17 @@ func Record(data map[string]interface{}) error {
 		return fmt.Errorf("name 不存在")
 	}
 
+	platform, ok := data["platform"].(string)
+	if !ok {
+		return fmt.Errorf("platform 不存在")
+	}
+
 	// 生成的文件名 name_日期_时间.ts
 	outputFile := fmt.Sprintf("%s_%s.ts", name, time.Now().Format("2006-01-02_15-04-05"))
 
 	userAgent := "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.0"
 
 	// 构造 ffmpeg 命令
-
 	cmd := exec.Command(
 		"./ffmpeg",
 		"-y",            // 覆盖输出文件
@@ -57,20 +70,31 @@ func Record(data map[string]interface{}) error {
 		"-c:v", "copy",
 		"-c:a", "copy",
 		"-t", "10",
-		outputFile,
 	)
 
-	// 输出下构造的命令
-	//fmt.Println("输出命令")
-	//fmt.Println(cmd.String())
+	// 开启分段录制
+	if cfg.EnableSegmenting {
+		cmd.Args = append(cmd.Args, "-f", "segment")
+		cmd.Args = append(cmd.Args, "-segment_time", strconv.Itoa(cfg.SegmentDurationSeconds))
+	}
+
+	// 设置输出文件名
+	// 最终的文件路径：cfg.SavePath + "/" + 直播平台名 + "/" + 直播间作者名 + "/" + 文件名
+	savePath := cfg.SavePath + "/" + platform + "/" + name
+
+	// 目录不存在则创建
+	err = fileutil.CheckDir(savePath)
+	if err != nil {
+		return err
+	}
+
+	saveFile := savePath + "/" + outputFile
+	cmd.Args = append(cmd.Args, "-o", saveFile)
 
 	// 启动命令
 	if err := cmd.Start(); err != nil {
 		return err
 	}
-	// 将 url 加入到正在录制的列表中
-	// 在主程序监控这个列表，
-	//recordingList = append(recordingList, url)
 
 	// 等待命令完成
 	if err := cmd.Wait(); err != nil {

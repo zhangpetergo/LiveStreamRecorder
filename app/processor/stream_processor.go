@@ -6,18 +6,29 @@ import (
 	"github.com/zhangpetergo/LiveStreamRecorder/app/resolver/douyin"
 	"github.com/zhangpetergo/LiveStreamRecorder/app/task"
 	"github.com/zhangpetergo/LiveStreamRecorder/foundation/logger"
+	"github.com/zhangpetergo/LiveStreamRecorder/foundation/urlutil"
 	"time"
 )
 
 // ProcessStream 获取流数据并记录
 func ProcessStream(url string) error {
-	// 获取流数据
-	data, err := douyin.GetStreamData(url)
-	if err != nil {
-		return err
+
+	var data map[string]interface{}
+	var err error
+
+	// 根据 url 判断直播平台
+	platformType := urlutil.GetPlatformFromURL(url)
+	switch platformType {
+	case urlutil.PlatformDouyin:
+		// 处理抖音直播
+		data, err = douyin.GetStreamData(url)
+		if err != nil {
+			return err
+		}
+		data["platform"] = "抖音直播"
 	}
 
-	// 记录流数据
+	// 录制直播
 	err = recorder.Record(data)
 	if err != nil {
 		return err
