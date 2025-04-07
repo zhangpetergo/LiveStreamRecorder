@@ -39,23 +39,20 @@ func main() {
 
 func run() error {
 
+	// -------------------------------------------------------------------------
 	// 加载配置文件
-	config.SetConfigPath("./config/config.yaml")
+	config.SetConfigPath("./config/server.yaml")
 	// 这里主动初始化
 	cfg, err := config.GetConfig()
 	if err != nil {
 		return err
 	}
 
-	//url := "https://live.douyin.com/788699151429"
-	//url := "https://live.douyin.com/7032984711"
-
+	// -------------------------------------------------------------------------
 	// 读取 url 配置文件
+	urls := []string{"", ""}
 
-	// 返回 url 列表
-	urls := []string{"https://live.douyin.com/1", "https://live.douyin.com/2", "https://live.douyin.com/3"}
-	//names := []string{"1", "2", "3"}
-
+	// -------------------------------------------------------------------------
 	// 监测直播状态
 	monitor.Listen(urls)
 

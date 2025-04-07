@@ -13,9 +13,11 @@ import (
 // ProcessStream 获取流数据并记录
 func ProcessStream(url string) error {
 
+	// -------------------------------------------------------------------------
 	var data map[string]interface{}
 	var err error
 
+	// -------------------------------------------------------------------------
 	// 根据 url 判断直播平台
 	platformType := urlutil.GetPlatformFromURL(url)
 	switch platformType {
@@ -23,14 +25,17 @@ func ProcessStream(url string) error {
 		// 处理抖音直播
 		data, err = douyin.GetStreamData(url)
 		if err != nil {
+			err = fmt.Errorf("douyin.GetStreamData: %w", err)
 			return err
 		}
 		data["platform"] = "抖音直播"
 	}
 
+	// -------------------------------------------------------------------------
 	// 录制直播
 	err = recorder.Record(data)
 	if err != nil {
+		err = fmt.Errorf("recorder.Record: %w", err)
 		return err
 	}
 

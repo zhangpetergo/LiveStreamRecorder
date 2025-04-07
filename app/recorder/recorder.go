@@ -4,6 +4,7 @@ package recorder
 import (
 	"fmt"
 	"github.com/zhangpetergo/LiveStreamRecorder/app/config"
+	"github.com/zhangpetergo/LiveStreamRecorder/app/task"
 	"github.com/zhangpetergo/LiveStreamRecorder/foundation/fileutil"
 	"os/exec"
 	"strconv"
@@ -13,6 +14,7 @@ import (
 // Record 根据 输入的 url 使用 ffmpeg 下载直播流
 func Record(data map[string]interface{}) error {
 
+	// -------------------------------------------------------------------------
 	cfg, err := config.GetConfig()
 	// 从逻辑上说 在 main 初始化 config后，这里不会出现 err
 	if err != nil {
@@ -21,7 +23,7 @@ func Record(data map[string]interface{}) error {
 
 	// 直播流 url
 	url, ok := data["url"].(string)
-	if !ok {
+	if !ok || url == "" {
 		return fmt.Errorf("url 不存在")
 	}
 
@@ -36,12 +38,15 @@ func Record(data map[string]interface{}) error {
 		return fmt.Errorf("platform 不存在")
 	}
 
+	// -------------------------------------------------------------------------
+	// 构造 ffmpeg 命令
+	baseFileName := fmt.Sprintf("%s_%s", name, time.Now().Format("2006-01-02_15-04-05"))
+
 	// 生成的文件名 name_日期_时间.ts
-	outputFile := fmt.Sprintf("%s_%s.ts", name, time.Now().Format("2006-01-02_15-04-05"))
+	outputFile := fmt.Sprintf("%s.ts", baseFileName)
 
 	userAgent := "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.0"
 
-	// 构造 ffmpeg 命令
 	cmd := exec.Command(
 		"./ffmpeg",
 		"-y",            // 覆盖输出文件
@@ -69,15 +74,19 @@ func Record(data map[string]interface{}) error {
 		"-map", "0",
 		"-c:v", "copy",
 		"-c:a", "copy",
-		"-t", "10",
 	)
+
+	// -------------------------------------------------------------------------
 
 	// 开启分段录制
 	if cfg.EnableSegmenting {
 		cmd.Args = append(cmd.Args, "-f", "segment")
 		cmd.Args = append(cmd.Args, "-segment_time", strconv.Itoa(cfg.SegmentDurationSeconds))
+		// 生成的文件名 name_日期_时间_%3d.ts
+		outputFile = fmt.Sprintf("%s_%%03d.ts", baseFileName)
 	}
 
+	// -------------------------------------------------------------------------
 	// 设置输出文件名
 	// 最终的文件路径：cfg.SavePath + "/" + 直播平台名 + "/" + 直播间作者名 + "/" + 文件名
 	savePath := cfg.SavePath + "/" + platform + "/" + name
@@ -89,17 +98,22 @@ func Record(data map[string]interface{}) error {
 	}
 
 	saveFile := savePath + "/" + outputFile
-	cmd.Args = append(cmd.Args, "-o", saveFile)
+	cmd.Args = append(cmd.Args, saveFile)
 
+	// -------------------------------------------------------------------------
 	// 启动命令
 	if err := cmd.Start(); err != nil {
 		return err
 	}
 
+	// 添加任务到任务列表
+	task.AddTask(url, name)
+
 	// 等待命令完成
 	if err := cmd.Wait(); err != nil {
+		task.RemoveTask(url)
 		return err
 	}
-
+	task.RemoveTask(url)
 	return nil
 }

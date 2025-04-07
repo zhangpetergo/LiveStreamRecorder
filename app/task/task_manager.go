@@ -62,7 +62,7 @@ func PrintTasks() {
 	tasks = GetTasks()
 	for _, task := range tasks {
 		// 打印当前时间
-		fmt.Println(task.Name, "is recording", time.Now().Format("2006-01-02 15:04:05"))
+		fmt.Println(task.Name, "正在录制", time.Now().Format("2006-01-02 15:04:05"))
 	}
 	// 确保刷新立即生效
 	fmt.Print("\033[H")

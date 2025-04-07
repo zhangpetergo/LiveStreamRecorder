@@ -40,7 +40,7 @@ func Listen(streams []string) {
 				logger.Log.Infow("检测到直播开播", "url", stream)
 				// 直播开播，启动录制
 				go func() {
-
+					// -------------------------------------------------------------------------
 					defer func() {
 						if r := recover(); r != nil {
 							logger.Log.Errorw("ProcessStream", "url", stream, "recover", r)
@@ -49,6 +49,7 @@ func Listen(streams []string) {
 						}
 					}()
 
+					// -------------------------------------------------------------------------
 					err := processor.ProcessStream(stream)
 					if err != nil {
 						logger.Log.Errorw("ProcessStream", "url", stream, "err", err)
@@ -56,6 +57,7 @@ func Listen(streams []string) {
 						recordingStreams[stream] = false
 					}
 
+					// -------------------------------------------------------------------------
 					// 直播下播，更新录制状态为false
 					recordingStreams[stream] = false
 				}()
