@@ -2,9 +2,9 @@
 package douyin
 
 import (
-	"errors"
 	"fmt"
 	"github.com/gocolly/colly/v2"
+	"github.com/pkg/errors"
 	"regexp"
 	"strings"
 )
@@ -52,10 +52,13 @@ func GetStreamData(url string) (map[string]interface{}, error) {
 	})
 
 	c.OnError(func(r *colly.Response, err error) {
-		resErr = err
+		resErr = errors.New(err.Error())
 	})
 
-	c.Visit(url)
+	err := c.Visit(url)
+	if err != nil {
+		return nil, errors.New(err.Error())
+	}
 
 	// -------------------------------------------------------------------------
 	if resErr != nil {
@@ -127,7 +130,7 @@ func CheckLiveStream(url string) (bool, error) {
 	})
 
 	c.OnError(func(r *colly.Response, err error) {
-		resErr = err
+		resErr = errors.New(err.Error())
 	})
 
 	err := c.Visit(url)

@@ -3,6 +3,7 @@ package recorder
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
 	"github.com/zhangpetergo/LiveStreamRecorder/app/config"
 	"github.com/zhangpetergo/LiveStreamRecorder/app/task"
 	"github.com/zhangpetergo/LiveStreamRecorder/foundation/fileutil"
@@ -18,24 +19,24 @@ func Record(data map[string]interface{}) error {
 	cfg, err := config.GetConfig()
 	// 从逻辑上说 在 main 初始化 config后，这里不会出现 err
 	if err != nil {
-		return err
+		return errors.New("recorder.Record: " + err.Error())
 	}
 
 	// 直播流 url
 	url, ok := data["url"].(string)
 	if !ok || url == "" {
-		return fmt.Errorf("url 不存在")
+		return errors.New("recorder.Record: url is empty")
 	}
 
 	// 作者名
 	name, ok := data["name"].(string)
 	if !ok {
-		return fmt.Errorf("name 不存在")
+		return errors.New("recorder.Record: name is empty")
 	}
 
 	platform, ok := data["platform"].(string)
 	if !ok {
-		return fmt.Errorf("platform 不存在")
+		return errors.New("recorder.Record: platform is empty")
 	}
 
 	// -------------------------------------------------------------------------
@@ -94,7 +95,7 @@ func Record(data map[string]interface{}) error {
 	// 目录不存在则创建
 	err = fileutil.CheckDir(savePath)
 	if err != nil {
-		return err
+		return errors.New("recorder.Record: " + err.Error())
 	}
 
 	saveFile := savePath + "/" + outputFile
@@ -103,7 +104,7 @@ func Record(data map[string]interface{}) error {
 	// -------------------------------------------------------------------------
 	// 启动命令
 	if err := cmd.Start(); err != nil {
-		return err
+		return errors.New("recorder.Record: " + err.Error())
 	}
 
 	// 添加任务到任务列表
@@ -112,7 +113,7 @@ func Record(data map[string]interface{}) error {
 	// 等待命令完成
 	if err := cmd.Wait(); err != nil {
 		task.RemoveTask(url)
-		return err
+		return errors.New("recorder.Record: " + err.Error())
 	}
 	task.RemoveTask(url)
 	return nil

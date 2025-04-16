@@ -1,7 +1,8 @@
+// Package config 管理配置文件相关的操作
 package config
 
 import (
-	"fmt"
+	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 	"sync"
 )
@@ -36,7 +37,7 @@ func GetConfig() (*Config, error) {
 	once.Do(func() {
 
 		if configPath == "" {
-			loadErr = fmt.Errorf("config path not set")
+			loadErr = errors.Wrap(loadErr, "config path not set")
 			return
 		}
 
@@ -46,13 +47,13 @@ func GetConfig() (*Config, error) {
 		// -------------------------------------------------------------------------
 		viper.SetConfigFile(configPath)
 		if err := viper.ReadInConfig(); err != nil {
-			loadErr = fmt.Errorf("viper.ReadInConfig: %w", err)
+			loadErr = errors.Wrap(loadErr, "viper.ReadInConfig")
 			return
 		}
 
 		// -------------------------------------------------------------------------
 		if err := viper.Unmarshal(&config); err != nil {
-			loadErr = fmt.Errorf("viper.Unmarshal: %w", err)
+			loadErr = errors.Wrap(loadErr, "viper.Unmarshal")
 			return
 		}
 	})

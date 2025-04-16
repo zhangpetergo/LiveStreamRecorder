@@ -52,7 +52,7 @@ func Listen(streams []string) {
 					// -------------------------------------------------------------------------
 					err := processor.ProcessStream(stream)
 					if err != nil {
-						logger.Log.Errorw("ProcessStream", "url", stream, "err", err)
+						logger.Log.Errorf("ProcessStream url: %s %+v ", stream, err)
 						// 如果发生错误，更新直播状态为 false
 						recordingStreams[stream] = false
 					}

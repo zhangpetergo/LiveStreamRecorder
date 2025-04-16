@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/zhangpetergo/LiveStreamRecorder/app/config"
 	"github.com/zhangpetergo/LiveStreamRecorder/app/monitor"
-
 	"github.com/zhangpetergo/LiveStreamRecorder/app/task"
 	"github.com/zhangpetergo/LiveStreamRecorder/foundation/logger"
 	"os"
@@ -26,7 +25,8 @@ func main() {
 	logger.Log.Info("start")
 
 	if err := run(); err != nil {
-		logger.Log.Errorw("startup", "err", err)
+		logger.Log.Errorf("startup %+v", err)
+
 		os.Exit(1)
 	}
 }
